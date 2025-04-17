@@ -97,7 +97,7 @@ class ButtonGrid(QGridLayout):
              ['7', '8', '9', '*'],
              ['4', '5', '6', '-'],
              ['1', '2', '3', '+'],
-             ['N',  '0', '.', '='],
+             ['+/-',  '0', '.', '='],
          ]
 
         self.display = display
@@ -106,6 +106,7 @@ class ButtonGrid(QGridLayout):
         self._left = None
         self._right = None
         self._op = None
+        self._result = False
         self._equation = ''
         self._equationInitialValue = 'Sua conta'
         self.equation = self._equationInitialValue
@@ -154,7 +155,7 @@ class ButtonGrid(QGridLayout):
                 self._makeSlot(self._operatorClicked,text)
             )
 
-        if text == 'N':
+        if text == '+/-':
             button.clicked.connect(self._invertNumber)
 
         if text == '=':
@@ -172,6 +173,11 @@ class ButtonGrid(QGridLayout):
 
     @Slot()
     def _insertToDisplay(self,text):
+
+        if self._result and (isNumberOrDot(text) or '+/-' in text):
+            self._clear()
+            self._result = False
+
         newDisplayText = self.display.text() + text
         
         if not isValidNumber(newDisplayText):
@@ -191,6 +197,9 @@ class ButtonGrid(QGridLayout):
 
     @Slot()
     def _operatorClicked(self,text):
+        if self._result:
+            self._result = False
+
         displayText = self.display.text()
 
         if not isValidNumber(displayText) and self._left is None:
@@ -238,6 +247,9 @@ class ButtonGrid(QGridLayout):
         self._left = str(result)
         self._right = None
         self.display.setFocus()
+        self._result = True
+
+
 
         if result == 'Error!':
             self._left = None
@@ -247,8 +259,7 @@ class ButtonGrid(QGridLayout):
 
         if number:
             newNumber = convertToNumber(number) *-1
-
-        self.display.setText(str(newNumber))
+            self.display.setText(str(newNumber))
     
     def _backspace(self):
         self.display.backspace()
